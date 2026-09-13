@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Florescer — Planner Pessoal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=Nunito+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+
+<style>
+  /* ============ TOKENS ============ */
+  :root{
+    --cream:      #FBF5F0;
+    --blush:      #F2DCDD;
+    --blush-deep: #E7C3C7;
+    --lavender:   #DED3EC;
+    --lavender-d: #C9B8E3;
+    --peach:      #F3DAC0;
+    --terracotta: #C1795F;
+    --terracotta-d:#A8604A;
+    --gold:       #BE9A4A;
+    --ink:        #4A3B41;
+    --ink-soft:   #8B767C;
+    --white:      #FFFFFF;
+    --line:       rgba(74,59,65,0.10);
+    --shadow-soft: 0 12px 30px -14px rgba(150,110,110,0.35);
+    --shadow-tiny: 0 4px 12px -6px rgba(150,110,110,0.30);
+    --radius-lg: 28px;
+    --radius-md: 20px;
+    --radius-sm: 12px;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(1100px 600px at 8% -10%, #FBEDEE 0%, transparent 60%),
+      radial-gradient(900px 500px at 100% 0%, #EFE7F6 0%, transparent 55%),
+      var(--cream);
+    color:var(--ink);
+    font-family:'Nunito Sans', sans-serif;
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,.serif{font-family:'Fraunces', serif;}
+  button{font-family:inherit;cursor:pointer;}
+  ::selection{background:var(--lavender-d);color:var(--white);}
+  a{color:var(--terracotta-d);}
+
+  .wrap{max-width:1080px;margin:0 auto;padding:22px 18px 70px;}
+
+  /* ============ LOGIN SCREEN ============ */
+  #login-screen{
+    min-height:100vh;display:flex;align-items:center;justify-content:center;
+    padding:24px;
+  }
+  .login-card{
+    background:var(--white);
+    border-radius:32px;
+    max-width:420px;width:100%;
+    padding:44px 34px 38px;
+    text-align:center;
+    box-shadow:var(--shadow-soft);
+    border:1px solid var(--line);
+    position:relative;
+    overflow:hidden;
+  }
+  .login-card::before{
+    content:"";position:absolute;top:-60px;right:-60px;width:160px;height:160px;
+    background:radial-gradient(circle, var(--blush) 0%, transparent 70%);
+  }
+  .login-mark{
+    width:52px;height:52px;margin:0 auto 18px;border-radius:50%;
+    background:conic-gradient(from 210deg, var(--blush-deep), var(--lavender-d), var(--peach), var(--blush-deep));
+  }
+  .login-card h1{font-size:1.7rem;font-weight:500;margin:0 0 8px;letter-spacing:.2px;}
+  .login-card p{color:var(--ink-soft);font-size:.95rem;line-height:1.55;margin:0 0 26px;}
+  .btn-google{
+    display:flex;align-items:center;justify-content:center;gap:10px;
+    width:100%;padding:13px 18px;border-radius:999px;border:none;
+    background:var(--ink);color:var(--white);font-weight:700;font-size:.95rem;
+    transition:transform .15s ease, background .2s ease;
+  }
+  .btn-google:hover{background:var(--terracotta-d);transform:translateY(-1px);}
+  .btn-google svg{width:18px;height:18px;}
+  .login-note{margin-top:16px;font-size:.78rem;color:var(--ink-soft);}
+  .config-warning{
+    margin-top:18px;background:#FBEFE2;border:1px solid #E9CFA6;color:#7A5A26;
+    border-radius:14px;padding:12px 14px;font-size:.8rem;text-align:left;line-height:1.5;
+  }
+  .config-warning code{background:rgba(0,0,0,.06);padding:1px 5px;border-radius:5px;}
+
+  /* ============ TOP BAR ============ */
+  .topbar{
+    display:flex;align-items:center;justify-content:space-between;
+    margin-bottom:26px;flex-wrap:wrap;gap:12px;
+  }
+  .brand{display:flex;align-items:center;gap:12px;}
+  .brand .mark{width:34px;height:34px;border-radius:50%;
+    background:conic-gradient(from 210deg, var(--blush-deep), var(--lavender-d), var(--peach), var(--blush-deep));}
+  .brand h1{font-size:1.35rem;font-weight:500;margin:0;}
+  .brand span{display:block;font-size:.72rem;color:var(--ink-soft);margin-top:-2px;}
+  .top-actions{display:flex;align-items:center;gap:10px;}
+  .sync-pill{
+    display:flex;align-items:center;gap:7px;font-size:.75rem;color:var(--ink-soft);
+    background:var(--white);border:1px solid var(--line);padding:7px 12px;border-radius:999px;
+  }
+  .sync-dot{width:7px;height:7px;border-radius:50%;background:#8FBF9C;flex:none;}
+  .sync-dot.syncing{background:var(--gold);animation:pulse 1s infinite;}
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.35;}}
+  .icon-btn{
+    width:36px;height:36px;border-radius:50%;border:1px solid var(--line);
+    background:var(--white);display:flex;align-items:center;justify-content:center;
+    color:var(--ink-soft);transition:all .15s ease;
+  }
+  .icon-btn:hover{color:var(--terracotta-d);border-color:var(--terracotta-d);transform:rotate(20deg);}
+  .icon-btn svg{width:16px;height:16px;}
+
+  /* ============ HERO / QUOTE CARD ============ */
+  .hero{
+    background:linear-gradient(135deg, var(--blush) 0%, var(--peach) 55%, var(--lavender) 100%);
+    border-radius:var(--radius-lg);
+    padding:38px 34px;
+    margin-bottom:22px;
+    position:relative;
+    overflow:hidden;
+    box-shadow:var(--shadow-soft);
+  }
+  .hero::after{
+    content:"";position:absolute;bottom:-90px;left:-40px;width:220px;height:220px;border-radius:50%;
+    background:radial-gradient(circle, rgba(255,255,255,.5), transparent 70%);
+  }
+  .hero-eyebrow{font-size:.82rem;color:var(--terracotta-d);font-weight:700;margin:0 0 10px;}
+  .hero blockquote{
+    font-family:'Fraunces', serif;font-style:italic;font-weight:500;
+    font-size:clamp(1.25rem,2.4vw,1.7rem);line-height:1.4;margin:0 0 14px;
+    max-width:640px;position:relative;z-index:1;
+  }
+  .hero-ref{font-size:.85rem;color:var(--ink-soft);margin:0 0 20px;position:relative;z-index:1;}
+  .hero-actions{display:flex;gap:10px;position:relative;z-index:1;}
+  .btn-ghost{
+    background:rgba(255,255,255,.65);border:1px solid rgba(255,255,255,.9);
+    color:var(--ink);padding:9px 18px;border-radius:999px;font-size:.83rem;font-weight:700;
+    transition:background .2s ease;
+  }
+  .btn-ghost:hover{background:var(--white);}
+
+  /* ============ GRID OF STAT CARDS ============ */
+  .stat-grid{
+    display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:22px;
+  }
+  @media (max-width:820px){ .stat-grid{grid-template-columns:1fr;} }
+
+  .card{
+    background:var(--white);border:1px solid var(--line);border-radius:var(--radius-md);
+    padding:22px;box-shadow:var(--shadow-tiny);
+  }
+  .card h3{font-size:.98rem;font-weight:600;margin:0 0 4px;}
+  .card .sub{font-size:.78rem;color:var(--ink-soft);margin:0 0 16px;}
+
+  /* progress ring */
+  .ring-card{display:flex;flex-direction:column;align-items:center;text-align:center;}
+  .ring-wrap{position:relative;width:132px;height:132px;margin:4px 0 6px;}
+  .ring-wrap svg{transform:rotate(-90deg);width:100%;height:100%;}
+  .ring-bg{fill:none;stroke:#F1E7EA;stroke-width:11;}
+  .ring-fg{fill:none;stroke:url(#ringGradient);stroke-width:11;stroke-linecap:round;
+    transition:stroke-dashoffset .7s cubic-bezier(.4,0,.2,1);}
+  .ring-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+  .ring-center b{font-family:'Fraunces',serif;font-size:1.55rem;font-weight:500;}
+  .ring-center small{font-size:.68rem;color:var(--ink-soft);}
+  .ring-foot{font-size:.78rem;color:var(--ink-soft);}
+
+  /* weekly bars */
+  .week-bars{display:flex;align-items:flex-end;gap:8px;height:110px;margin-top:6px;}
+  .week-bar-col{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:6px;}
+  .week-bar-track{width:100%;max-width:22px;height:78px;background:#F3EBEE;border-radius:10px;display:flex;align-items:flex-end;overflow:hidden;}
+  .week-bar-fill{width:100%;background:linear-gradient(180deg, var(--lavender-d), var(--blush-deep));border-radius:10px;
+    transition:height .6s cubic-bezier(.4,0,.2,1);}
+  .week-bar-col.today .week-bar-track{box-shadow:0 0 0 2px var(--terracotta) inset;}
+  .week-bar-label{font-size:.68rem;color:var(--ink-soft);}
+  .week-bar-col.today .week-bar-label{color:var(--terracotta-d);font-weight:700;}
+
+  /* streak */
+  .streak-row{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px;}
+  .streak-dot{width:16px;height:16px;border-radius:5px;background:#F1E7EA;}
+  .streak-dot.hit{background:linear-gradient(135deg, var(--gold), var(--terracotta));}
+  .streak-count{display:flex;align-items:baseline;gap:6px;margin-top:14px;}
+  .streak-count b{font-family:'Fraunces',serif;font-size:1.6rem;font-weight:500;color:var(--terracotta-d);}
+  .streak-count span{font-size:.78rem;color:var(--ink-soft);}
+
+  /* ============ WEEK CALENDAR ============ */
+  .section-title{display:flex;align-items:center;justify-content:space-between;margin:6px 0 14px;}
+  .section-title h2{font-size:1.1rem;font-weight:600;margin:0;}
+  .tabs{display:flex;gap:6px;background:var(--white);border:1px solid var(--line);padding:4px;border-radius:999px;}
+  .tab{padding:7px 15px;border-radius:999px;border:none;background:transparent;font-size:.8rem;font-weight:700;color:var(--ink-soft);}
+  .tab.active{background:var(--ink);color:var(--white);}
+
+  .calendar{
+    display:grid;grid-template-columns:repeat(7,1fr);gap:10px;margin-bottom:26px;
+  }
+  @media (max-width:760px){ .calendar{grid-template-columns:repeat(auto-fit,minmax(130px,1fr));} }
+  .day-col{
+    background:var(--white);border:1px solid var(--line);border-radius:var(--radius-sm);
+    padding:12px 10px;min-height:150px;display:flex;flex-direction:column;gap:8px;
+  }
+  .day-col.is-today{border-color:var(--terracotta);box-shadow:0 0 0 1px var(--terracotta) inset;}
+  .day-head{display:flex;flex-direction:column;line-height:1.15;}
+  .day-head b{font-size:.72rem;letter-spacing:.3px;color:var(--ink-soft);text-transform:capitalize;}
+  .day-head span{font-family:'Fraunces',serif;font-size:1.15rem;}
+  .day-col.is-today .day-head b{color:var(--terracotta-d);}
+  .day-task{
+    font-size:.74rem;line-height:1.35;padding:6px 8px;border-radius:8px;background:var(--cream);
+    display:flex;gap:6px;align-items:flex-start;
+  }
+  .day-task.done{opacity:.5;text-decoration:line-through;}
+  .day-task i{width:6px;height:6px;border-radius:50%;background:var(--lavender-d);margin-top:5px;flex:none;}
+  .day-empty{font-size:.72rem;color:var(--ink-soft);opacity:.6;font-style:italic;margin-top:auto;}
+
+  /* ============ TASK LIST ============ */
+  .task-list{display:flex;flex-direction:column;gap:10px;margin-bottom:10px;}
+  .task-row{
+    display:flex;align-items:flex-start;gap:14px;background:var(--white);
+    border:1px solid var(--line);border-radius:16px;padding:14px 16px;
+    transition:transform .15s ease, box-shadow .15s ease;
+  }
+  .task-row:hover{box-shadow:var(--shadow-tiny);transform:translateY(-1px);}
+  .task-row.completed{opacity:.55;}
+  .check{
+    width:24px;height:24px;border-radius:50%;border:2px solid var(--lavender-d);flex:none;
+    display:flex;align-items:center;justify-content:center;background:var(--white);
+    transition:all .25s ease;position:relative;top:1px;
+  }
+  .check svg{width:13px;height:13px;stroke:var(--white);opacity:0;transform:scale(.5);transition:all .2s ease;}
+  .task-row.completed .check{background:linear-gradient(135deg, var(--gold), var(--terracotta));border-color:transparent;}
+  .task-row.completed .check svg{opacity:1;transform:scale(1);}
+  .task-body{flex:1;min-width:0;}
+  .task-title{font-size:.94rem;font-weight:700;margin:0 0 2px;word-break:break-word;}
+  .task-row.completed .task-title{text-decoration:line-through;color:var(--ink-soft);}
+  .task-meta{font-size:.75rem;color:var(--ink-soft);display:flex;gap:8px;flex-wrap:wrap;}
+  .task-notes{font-size:.8rem;color:var(--ink-soft);margin-top:4px;line-height:1.4;}
+  .pill-due{background:var(--blush);color:var(--terracotta-d);padding:2px 9px;border-radius:999px;font-weight:700;}
+  .pill-list{background:var(--lavender);color:#5C4A7A;padding:2px 9px;border-radius:999px;font-weight:700;}
+
+  .empty-state{
+    text-align:center;padding:50px 20px;color:var(--ink-soft);
+    background:var(--white);border-radius:var(--radius-md);border:1px dashed var(--line);
+  }
+  .empty-state b{display:block;font-family:'Fraunces',serif;font-size:1.15rem;color:var(--ink);margin-bottom:6px;}
+
+  footer{text-align:center;color:var(--ink-soft);font-size:.75rem;margin-top:36px;}
+
+  /* confetti */
+  .confetti-piece{
+    position:fixed;top:-10px;width:8px;height:14px;border-radius:2px;pointer-events:none;z-index:999;
+    animation:confetti-fall linear forwards;
+  }
+  @keyframes confetti-fall{
+    to{ transform:translateY(110vh) rotate(600deg); opacity:0; }
+  }
+
+  .hidden{display:none !important;}
+
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:0.001ms !important; transition-duration:0.001ms !important;}
+  }
+</style>
+</head>
+<body>
+
+<!-- ======================= LOGIN SCREEN ======================= -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-mark"></div>
+    <h1>Florescer</h1>
+    <p>Seu planner pessoal, sincronizado com o Google Tasks. Conecte sua conta para ver suas tarefas, seu progresso e um lembrete gentil para cuidar de você hoje.</p>
+    <button class="btn-google" id="btn-login">
+      <svg viewBox="0 0 24 24"><path fill="#fff" d="M21.35 11.1h-9.17v2.98h5.27c-.23 1.4-1.63 4.1-5.27 4.1-3.17 0-5.76-2.62-5.76-5.85s2.59-5.85 5.76-5.85c1.8 0 3.01.77 3.7 1.43l2.52-2.43C16.9 3.68 14.9 2.7 12.18 2.7 6.98 2.7 2.77 6.9 2.77 12.13s4.21 9.43 9.41 9.43c5.43 0 9.03-3.82 9.03-9.2 0-.62-.07-1.09-.15-1.56z"/></svg>
+      Entrar com Google
+    </button>
+    <p class="login-note">Pedimos apenas permissão de leitura e escrita do Google Tasks.</p>
+    <div id="config-warning" class="config-warning hidden">
+      ⚠️ Ainda falta configurar o <code>CLIENT_ID</code> do Google no código. Abra o arquivo <code>florescer.html</code>, procure por <code>CLIENT_ID = "..."</code> perto do topo do script e cole o seu ID de cliente OAuth. Veja o passo a passo enviado junto com este arquivo.
+    </div>
+  </div>
+</div>
+
+<!-- ======================= DASHBOARD ======================= -->
+<div id="dashboard" class="wrap hidden">
+
+  <div class="topbar">
+    <div class="brand">
+      <div class="mark"></div>
+      <div>
+        <h1>Florescer</h1>
+        <span id="user-email">—</span>
+      </div>
+    </div>
+    <div class="top-actions">
+      <div class="sync-pill"><span class="sync-dot" id="sync-dot"></span><span id="sync-label">sincronizado</span></div>
+      <button class="icon-btn" id="btn-refresh" title="Sincronizar agora">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 3v6h-6"/></svg>
+      </button>
+      <button class="icon-btn" id="btn-logout" title="Sair">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- HERO / QUOTE -->
+  <div class="hero">
+    <p class="hero-eyebrow">um lembrete para hoje</p>
+    <blockquote id="quote-text">Carregando sua mensagem do dia…</blockquote>
+    <p class="hero-ref" id="quote-ref"></p>
+    <div class="hero-actions">
+      <button class="btn-ghost" id="btn-new-quote">Outra mensagem</button>
+    </div>
+  </div>
+
+  <!-- STAT GRID -->
+  <div class="stat-grid">
+    <div class="card ring-card">
+      <h3>Hoje</h3>
+      <p class="sub">tarefas concluídas</p>
+      <div class="ring-wrap">
+        <svg viewBox="0 0 132 132">
+          <defs>
+            <linearGradient id="ringGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#BE9A4A"/>
+              <stop offset="100%" stop-color="#C1795F"/>
+            </linearGradient>
+          </defs>
+          <circle class="ring-bg" cx="66" cy="66" r="52"/>
+          <circle class="ring-fg" id="ring-today" cx="66" cy="66" r="52" stroke-dasharray="327" stroke-dashoffset="327"/>
+        </svg>
+        <div class="ring-center"><b id="ring-today-pct">0%</b><small id="ring-today-frac">0/0</small></div>
+      </div>
+      <p class="ring-foot" id="ring-today-msg">sem tarefas para hoje ainda</p>
+    </div>
+
+    <div class="card">
+      <h3>Semana</h3>
+      <p class="sub">consistência diária</p>
+      <div class="week-bars" id="week-bars"></div>
+    </div>
+
+    <div class="card">
+      <h3>Sequência</h3>
+      <p class="sub">últimos 14 dias com tarefas concluídas</p>
+      <div class="streak-row" id="streak-row"></div>
+      <div class="streak-count"><b id="streak-num">0</b><span>dias seguidos</span></div>
+    </div>
+  </div>
+
+  <!-- WEEK CALENDAR -->
+  <div class="section-title"><h2>Sua semana</h2></div>
+  <div class="calendar" id="calendar"></div>
+
+  <!-- TASK LIST -->
+  <div class="section-title">
+    <h2>Tarefas</h2>
+    <div class="tabs">
+      <button class="tab active" data-filter="today">Hoje</button>
+      <button class="tab" data-filter="week">Semana</button>
+      <button class="tab" data-filter="all">Todas</button>
+    </div>
+  </div>
+  <div class="task-list" id="task-list"></div>
+
+  <footer>Florescer · seus dados ficam só entre você e o Google Tasks</footer>
+</div>
+
+<script>
+/* =========================================================================
+   CONFIGURAÇÃO — edite apenas esta parte
+   ========================================================================= */
+const CLIENT_ID = "SEU_CLIENT_ID_AQUI.apps.googleusercontent.com"; // <-- cole seu Client ID do Google Cloud Console aqui
+const TASKS_SCOPE = "https://www.googleapis.com/auth/tasks";
+const POLL_INTERVAL_MS = 45000; // 45s — pode ajustar entre 30000 e 60000
+const TASKLIST_ID = "@default"; // usa a lista padrão do Google Tasks
+
+/* =========================================================================
+   FRASES — autocuidado, amor-próprio e mensagens bíblicas
+   ========================================================================= */
+const QUOTES = [
+  { text: "Você não precisa terminar tudo hoje para merecer descanso.", ref: "lembrete gentil" },
+  { text: "Celebre a pequena vitória de hoje como se fosse grande — porque é.", ref: "lembrete gentil" },
+  { text: "\"Lancem sobre ele toda a sua ansiedade, porque ele tem cuidado de vocês.\"", ref: "1 Pedro 5:7" },
+  { text: "Desacelerar também é produtividade.", ref: "lembrete gentil" },
+  { text: "\"O Senhor é o meu pastor; de nada terei falta.\"", ref: "Salmos 23:1" },
+  { text: "Seu valor não é medido pela sua lista de tarefas.", ref: "lembrete gentil" },
+  { text: "\"Vinde a mim, todos os que estais cansados e sobrecarregados, e eu vos aliviarei.\"", ref: "Mateus 11:28" },
+  { text: "Beber água, respirar fundo e sorrir também contam como cuidar de si.", ref: "lembrete gentil" },
+  { text: "\"Tudo tem o seu tempo determinado.\"", ref: "Eclesiastes 3:1" },
+  { text: "Hoje, seja gentil com quem você está se tornando.", ref: "lembrete gentil" },
+  { text: "\"O Senhor é bom para os que esperam nele, para a alma que o busca.\"", ref: "Lamentações 3:25" },
+  { text: "Progresso imperfeito ainda é progresso.", ref: "lembrete gentil" },
+];
+
+/* =========================================================================
+   ESTADO
+   ========================================================================= */
+let accessToken = null;
+let tokenClient = null;
+let pollTimer = null;
+let allTasks = [];       // tarefas cruas vindas da API
+let currentFilter = "today";
+let userEmail = "";
+
+/* =========================================================================
+   AUTENTICAÇÃO (Google Identity Services)
+   ========================================================================= */
+function initGoogleAuth(){
+  if (!CLIENT_ID || CLIENT_ID.indexOf("SEU_CLIENT_ID_AQUI") !== -1){
+    document.getElementById("config-warning").classList.remove("hidden");
+    return;
+  }
+  tokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: CLIENT_ID,
+    scope: TASKS_SCOPE + " https://www.googleapis.com/auth/userinfo.email",
+    callback: (resp) => {
+      if (resp.error){
+        console.error("Erro de autenticação:", resp);
+        alert("Não foi possível conectar ao Google. Tente novamente.");
+        return;
+      }
+      accessToken = resp.access_token;
+      onLoginSuccess();
+    }
+  });
+}
+
+function login(){
+  if (!tokenClient){
+    alert("Configure o CLIENT_ID no código antes de conectar (veja o aviso na tela de login).");
+    return;
+  }
+  tokenClient.requestAccessToken({ prompt: "" });
+}
+
+function silentReauth(){
+  if (tokenClient){
+    tokenClient.requestAccessToken({ prompt: "" });
+  }
+}
+
+function logout(){
+  if (accessToken){
+    google.accounts.oauth2.revoke(accessToken, () => {});
+  }
+  accessToken = null;
+  clearInterval(pollTimer);
+  document.getElementById("dashboard").classList.add("hidden");
+  document.getElementById("login-screen").classList.remove("hidden");
+}
+
+async function onLoginSuccess(){
+  document.getElementById("login-screen").classList.add("hidden");
+  document.getElementById("dashboard").classList.remove("hidden");
+  await fetchUserEmail();
+  await syncTasks();
+  pollTimer = setInterval(syncTasks, POLL_INTERVAL_MS);
+}
+
+/* =========================================================================
+   CHAMADAS À API DO GOOGLE
+   ========================================================================= */
+async function apiFetch(url, options={}){
+  const res = await fetch(url, {
+    ...options,
+    headers: {
+      ...(options.headers||{}),
+      Authorization: "Bearer " + accessToken,
+    }
+  });
+  if (res.status === 401){
+    silentReauth();
+    throw new Error("Token expirado, reconectando...");
+  }
+  if (!res.ok){
+    const t = await res.text();
+    throw new Error("Erro na API do Google Tasks: " + t);
+  }
+  return res.status === 204 ? null : res.json();
+}
+
+async function fetchUserEmail(){
+  try{
+    const info = await apiFetch("https://www.googleapis.com/oauth2/v3/userinfo");
+    userEmail = info.email || "";
+    document.getElementById("user-email").textContent = userEmail;
+  }catch(e){ console.warn(e); }
+}
+
+async function fetchAllTasks(){
+  let items = [];
+  let pageToken = null;
+  do{
+    const params = new URLSearchParams({
+      showCompleted: "true",
+      showHidden: "true",
+      maxResults: "100",
+    });
+    if (pageToken) params.set("pageToken", pageToken);
+    const url = `https://tasks.googleapis.com/tasks/v1/lists/${encodeURIComponent(TASKLIST_ID)}/tasks?` + params.toString();
+    const data = await apiFetch(url);
+    if (data && data.items) items = items.concat(data.items);
+    pageToken = data ? data.nextPageToken : null;
+  } while(pageToken);
+  return items;
+}
+
+async function toggleTaskStatus(task){
+  const nowCompleting = task.status !== "completed";
+  const body = nowCompleting
+    ? { status: "completed" }
+    : { status: "needsAction", completed: null };
+  const url = `https://tasks.googleapis.com/tasks/v1/lists/${encodeURIComponent(TASKLIST_ID)}/tasks/${encodeURIComponent(task.id)}`;
+  await apiFetch(url, { method: "PATCH", headers: {"Content-Type":"application/json"}, body: JSON.stringify(body) });
+  if (nowCompleting) fireConfetti();
+  await syncTasks();
+}
+
+/* =========================================================================
+   SINCRONIZAÇÃO
+   ========================================================================= */
+async function syncTasks(){
+  setSyncing(true);
+  try{
+    allTasks = await fetchAllTasks();
+    renderAll();
+    setSyncStatus("sincronizado às " + new Date().toLocaleTimeString("pt-BR", {hour:"2-digit", minute:"2-digit"}));
+  }catch(e){
+    console.warn(e);
+    setSyncStatus("erro ao sincronizar — tentando de novo");
+  }finally{
+    setSyncing(false);
+  }
+}
+
+function setSyncing(isSyncing){
+  document.getElementById("sync-dot").classList.toggle("syncing", isSyncing);
+}
+function setSyncStatus(text){
+  document.getElementById("sync-label").textContent = text;
+}
+
+/* =========================================================================
+   HELPERS DE DATA
+   ========================================================================= */
+function todayKey(){ return dateKey(new Date()); }
+function dateKey(d){
+  const x = new Date(d);
+  x.setHours(0,0,0,0);
+  return x.toISOString().slice(0,10);
+}
+function taskDueKey(task){
+  if (!task.due) return null;
+  return task.due.slice(0,10); // "due" vem como RFC3339, a parte da data já é a correta
+}
+function taskCompletedKey(task){
+  if (!task.completed) return null;
+  return task.completed.slice(0,10);
+}
+function startOfWeek(d){
+  const x = new Date(d);
+  const day = x.getDay(); // 0=domingo
+  const diff = (day === 0 ? -6 : 1) - day; // segunda-feira como início
+  x.setDate(x.getDate() + diff);
+  x.setHours(0,0,0,0);
+  return x;
+}
+function addDays(d, n){ const x = new Date(d); x.setDate(x.getDate()+n); return x; }
+const WEEKDAY_LABELS = ["seg","ter","qua","qui","sex","sáb","dom"];
+
+/* =========================================================================
+   RENDER — QUOTE
+   ========================================================================= */
+function pickQuoteIndex(){
+  const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(),0,0)) / 86400000);
+  return dayOfYear % QUOTES.length;
+}
+let quoteIdx = pickQuoteIndex();
+function renderQuote(){
+  const q = QUOTES[quoteIdx];
+  document.getElementById("quote-text").textContent = q.text;
+  document.getElementById("quote-ref").textContent = q.ref;
+}
+document.getElementById("btn-new-quote").addEventListener("click", () => {
+  quoteIdx = (quoteIdx + 1) % QUOTES.length;
+  renderQuote();
+});
+
+/* =========================================================================
+   RENDER — TUDO
+   ========================================================================= */
+function renderAll(){
+  renderTodayRing();
+  renderWeekBars();
+  renderStreak();
+  renderCalendar();
+  renderTaskList();
+}
+
+function renderTodayRing(){
+  const tKey = todayKey();
+  const todays = allTasks.filter(t => taskDueKey(t) === tKey);
+  const done = todays.filter(t => t.status === "completed").length;
+  const total = todays.length;
+  const pct = total > 0 ? Math.round((done/total)*100) : 0;
+  const circumference = 2 * Math.PI * 52;
+  const offset = circumference - (pct/100)*circumference;
+  const ring = document.getElementById("ring-today");
+  ring.setAttribute("stroke-dasharray", circumference.toFixed(1));
+  ring.setAttribute("stroke-dashoffset", offset.toFixed(1));
+  document.getElementById("ring-today-pct").textContent = pct + "%";
+  document.getElementById("ring-today-frac").textContent = done + "/" + total;
+  document.getElementById("ring-today-msg").textContent =
+    total === 0 ? "sem tarefas para hoje ainda" :
+    pct === 100 ? "tudo concluído, respire fundo 🌿" :
+    "continue no seu ritmo";
+}
+
+function renderWeekBars(){
+  const start = startOfWeek(new Date());
+  const container = document.getElementById("week-bars");
+  container.innerHTML = "";
+  for (let i=0;i<7;i++){
+    const d = addDays(start, i);
+    const key = dateKey(d);
+    const dayTasks = allTasks.filter(t => taskDueKey(t) === key);
+    const done = dayTasks.filter(t => t.status === "completed").length;
+    const total = dayTasks.length;
+    const pct = total > 0 ? (done/total)*100 : 0;
+    const isToday = key === todayKey();
+
+    const col = document.createElement("div");
+    col.className = "week-bar-col" + (isToday ? " today" : "");
+    col.innerHTML = `
+      <div class="week-bar-track"><div class="week-bar-fill" style="height:${pct}%"></div></div>
+      <div class="week-bar-label">${WEEKDAY_LABELS[i]}</div>
+    `;
+    container.appendChild(col);
+  }
+}
+
+function renderStreak(){
+  const container = document.getElementById("streak-row");
+  container.innerHTML = "";
+  const completedDays = new Set(
+    allTasks.filter(t => t.status === "completed" && t.completed).map(t => taskCompletedKey(t))
+  );
+  const days = [];
+  for (let i=13;i>=0;i--){
+    const key = dateKey(addDays(new Date(), -i));
+    const hit = completedDays.has(key);
+    days.push(hit);
+    const dot = document.createElement("div");
+    dot.className = "streak-dot" + (hit ? " hit" : "");
+    dot.title = key;
+    container.appendChild(dot);
+  }
+  // sequência atual contando de trás para frente a partir de hoje
+  let streak = 0;
+  for (let i=13;i>=0;i--){
+    const key = dateKey(addDays(new Date(), -i));
+    if (completedDays.has(key)) streak++;
+    else if (key !== todayKey()) streak = 0; // permite que hoje ainda esteja "em aberto"
+  }
+  document.getElementById("streak-num").textContent = streak;
+}
+
+function renderCalendar(){
+  const start = startOfWeek(new Date());
+  const container = document.getElementById("calendar");
+  container.innerHTML = "";
+  const fmt = new Intl.DateTimeFormat("pt-BR", { weekday: "short" });
+  for (let i=0;i<7;i++){
+    const d = addDays(start, i);
+    const key = dateKey(d);
+    const isToday = key === todayKey();
+    const dayTasks = allTasks.filter(t => taskDueKey(t) === key)
+      .sort((a,b) => (a.status==="completed")-(b.status==="completed"));
+
+    const col = document.createElement("div");
+    col.className = "day-col" + (isToday ? " is-today" : "");
+    const head = document.createElement("div");
+    head.className = "day-head";
+    head.innerHTML = `<b>${fmt.format(d)}</b><span>${d.getDate()}</span>`;
+    col.appendChild(head);
+
+    if (dayTasks.length === 0){
+      const empty = document.createElement("div");
+      empty.className = "day-empty";
+      empty.textContent = "sem tarefas";
+      col.appendChild(empty);
+    } else {
+      dayTasks.slice(0,5).forEach(t => {
+        const item = document.createElement("div");
+        item.className = "day-task" + (t.status==="completed" ? " done" : "");
+        item.innerHTML = `<i></i><span>${escapeHtml(t.title || "(sem título)")}</span>`;
+        col.appendChild(item);
+      });
+      if (dayTasks.length > 5){
+        const more = document.createElement("div");
+        more.className = "day-empty";
+        more.textContent = "+" + (dayTasks.length-5) + " tarefas";
+        col.appendChild(more);
+      }
+    }
+    container.appendChild(col);
+  }
+}
+
+function renderTaskList(){
+  const container = document.getElementById("task-list");
+  container.innerHTML = "";
+
+  let filtered;
+  if (currentFilter === "today"){
+    const key = todayKey();
+    filtered = allTasks.filter(t => taskDueKey(t) === key);
+  } else if (currentFilter === "week"){
+    const start = startOfWeek(new Date());
+    const end = addDays(start, 6);
+    filtered = allTasks.filter(t => {
+      const k = taskDueKey(t);
+      if (!k) return false;
+      return k >= dateKey(start) && k <= dateKey(end);
+    });
+  } else {
+    filtered = allTasks.slice();
+  }
+
+  filtered.sort((a,b) => {
+    if ((a.status==="completed") !== (b.status==="completed")) return (a.status==="completed") ? 1 : -1;
+    return (a.due||"9999").localeCompare(b.due||"9999");
+  });
+
+  if (filtered.length === 0){
+    container.innerHTML = `<div class="empty-state"><b>Nada por aqui ainda</b>Adicione tarefas no Google Tasks e elas aparecem aqui automaticamente.</div>`;
+    return;
+  }
+
+  filtered.forEach(task => {
+    const row = document.createElement("div");
+    row.className = "task-row" + (task.status==="completed" ? " completed" : "");
+    const dueLabel = task.due ? new Date(task.due).toLocaleDateString("pt-BR", {day:"2-digit", month:"short"}) : null;
+    row.innerHTML = `
+      <button class="check" aria-label="Marcar tarefa">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+      </button>
+      <div class="task-body">
+        <p class="task-title">${escapeHtml(task.title || "(sem título)")}</p>
+        <div class="task-meta">
+          ${dueLabel ? `<span class="pill-due">${dueLabel}</span>` : ""}
+        </div>
+        ${task.notes ? `<p class="task-notes">${escapeHtml(task.notes)}</p>` : ""}
+      </div>
+    `;
+    row.querySelector(".check").addEventListener("click", () => toggleTaskStatus(task));
+    container.appendChild(row);
+  });
+}
+
+function escapeHtml(str){
+  const div = document.createElement("div");
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+/* =========================================================================
+   CONFETE — pequena animação ao concluir tarefa
+   ========================================================================= */
+function fireConfetti(){
+  const colors = ["#E7C3C7","#C9B8E3","#F3DAC0","#BE9A4A","#C1795F"];
+  for (let i=0;i<26;i++){
+    const piece = document.createElement("div");
+    piece.className = "confetti-piece";
+    piece.style.left = (45 + Math.random()*10) + "vw";
+    piece.style.background = colors[Math.floor(Math.random()*colors.length)];
+    piece.style.animationDuration = (1.4 + Math.random()*1.1) + "s";
+    piece.style.transform = `rotate(${Math.random()*360}deg)`;
+    document.body.appendChild(piece);
+    setTimeout(() => piece.remove(), 2600);
+  }
+}
+
+/* =========================================================================
+   EVENTOS
+   ========================================================================= */
+document.getElementById("btn-login").addEventListener("click", login);
+document.getElementById("btn-logout").addEventListener("click", logout);
+document.getElementById("btn-refresh").addEventListener("click", syncTasks);
+document.querySelectorAll(".tab").forEach(tab => {
+  tab.addEventListener("click", () => {
+    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+    tab.classList.add("active");
+    currentFilter = tab.dataset.filter;
+    renderTaskList();
+  });
+});
+
+/* Reautentica silenciosamente antes do token expirar (~1h), a cada 50 min */
+setInterval(() => { if (accessToken) silentReauth(); }, 50*60*1000);
+
+/* =========================================================================
+   INICIALIZAÇÃO
+   ========================================================================= */
+renderQuote();
+window.addEventListener("load", () => {
+  // aguarda o script do Google carregar
+  const waitGis = setInterval(() => {
+    if (window.google && google.accounts && google.accounts.oauth2){
+      clearInterval(waitGis);
+      initGoogleAuth();
+    }
+  }, 100);
+});
+</script>
+</body>
+</html>
